@@ -113,7 +113,7 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
 
 
                 with tab2:
-                    st.header("There is nothing here yet")
+                    st.write(release_info["body"])
 
 
 
