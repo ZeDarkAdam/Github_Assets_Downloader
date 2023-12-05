@@ -12,16 +12,25 @@ import time
 st.set_page_config(
     page_title="GitHub API Test",
     page_icon= "⬇️",
-    layout="centered" # wide, centered
+    layout="wide" # wide, centered
 )
 
-hide_st_style = """
-            <style>
-            .stDeployButton {display:none;}
-            footer {visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
+# hide_st_style = """
+#             <style>
+#             .stDeployButton {display:none;}
+#             footer {visibility: hidden;}
+#             </style>
+#             """
+# st.markdown(hide_st_style, unsafe_allow_html=True)
+
+
+
+def write_download_page(b_size, name, download_url, download_count, button_type):
+    mb_size = bytes_to_megabytes(b_size)
+    st.subheader(f'**{name}**')
+    st.link_button(f"**Download** ({mb_size} MB)", download_url, help = None, type = button_type, disabled=False, use_container_width=True)
+    st.caption(f'Downloaded: **{download_count}** times')
+
 
 
 
@@ -31,13 +40,12 @@ def bytes_to_megabytes(bytes_size):
     return rounded_megabytes
 
 
-
 def get_github_repo_assets_container(owner, repo_name, extension_filter):
 
     with st.container(border=True):
 
         with st.spinner(f'Getting the latest version of {repo_name}...'):
-            #time.sleep(0.5)
+            time.sleep(0.5)
 
             repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/latest"
 
@@ -54,6 +62,7 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 release_date_parsed = datetime.strptime(release_date, '%Y-%m-%dT%H:%M:%SZ')
                 time_difference = datetime.utcnow() - release_date_parsed
 
+                minutes = time_difference.total_seconds() // 60
                 hours = time_difference.total_seconds() // 3600
                 days = time_difference.days
                 weeks = math.ceil(time_difference.days / 7)
@@ -68,14 +77,17 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 elif days > 0:
                     ago = "days ago"
                     time_num = days
-                elif hours >= 0 : 
+                elif hours > 0 : 
                     ago = "hours ago"
                     time_num = hours
+                elif hours >= 0 : 
+                    ago = "minutes ago"
+                    time_num = minutes
                 ###########################################################################
                 
                 #with st.container(border=True):
                     
-                st.subheader(f"**{repo_name}**\nUpdated **{int(time_num)}** {ago}", divider='grey')
+                st.subheader(f"**{repo_name}**\nUpdated **{int(time_num)}** {ago}", divider = 'grey') # 'grey'
 
                 #st.write(f"Updated **{days}** {ago}")
                 # st.divider()
@@ -83,28 +95,33 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 #st.subheader("", divider='gray')
 
 
-                tab1, tab2 = st.tabs(["Download", "Changelog"])
+                tab1, tab2 = st.tabs(["Download", f"Changelog"])
 
                 
                 with tab1:
-                    all_ext = st.toggle(f'Show all file extensions', value = False, key = repo_name)
-                    if all_ext == False:   
-                        extension_filter = f".{extension_filter}"
-                    else:
-                        extension_filter = ""
+                    
+
+                    extension_filter = f".{extension_filter}"
+                    
+                    # if all_ext == True:   
+                    #     extension_filter = ""
 
                     assets = release_info["assets"] 
                     if assets:
                         for asset in assets:
                             if extension_filter in asset["name"]:
                                 
-                                st.write(" ")
-                                mb_size = bytes_to_megabytes(asset["size"])
-                                st.success(f'[**{asset["name"]}**]({asset["browser_download_url"]}) ({mb_size} MB)')
-                                #st.link_button(f'Download ({mb_size} MB)', "https://streamlit.io/gallery", use_container_width=True)
-                                st.caption(f'Downloaded: **{asset["download_count"]}** times')
-                                #st.link_button(f'{asset["download_count"]}', asset["browser_download_url"])
-                                
+                                write_download_page(asset["size"], asset["name"], asset["browser_download_url"], asset["download_count"], "primary")
+
+                                # mb_size = bytes_to_megabytes(asset["size"])
+                                # st.subheader(f'**{asset["name"]}**')
+                                # st.link_button(f"**Download** ({mb_size} MB)", asset["browser_download_url"], help = None, type = "primary", disabled=False, use_container_width=True)
+                                # st.caption(f'Downloaded: **{asset["download_count"]}** times')
+
+
+
+                            elif all_ext:
+                                write_download_page(asset["size"], asset["name"], asset["browser_download_url"], asset["download_count"], "secondary")
 
 
                     else:
@@ -113,12 +130,8 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
 
 
                 with tab2:
+
                     st.write(release_info["body"])
-
-
-
-
-
 
 
 
@@ -128,16 +141,35 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
 
             else:
                 st.error(f"Failed to fetch release information of **{repo_name}**. Status code: [**{response.status_code}**]({repo_url})")
-                #st.toast('**Перевищено ліміт запитів з цього іп, зайдіть пізніше**', icon='🚫')
+
+                #st.toast('The request limit from this IP address has been exceeded, please come back later', icon=None)
+                return 403
 
 
 
+#st.sidebar.title(f'Add repos')
+all_ext = st.sidebar.toggle(f'Show all file extensions', value = False)
 
 
 st.title("Github Assets Downloader")
 
-owner, repo_name, extension_filter = "NoName-exe", "revanced-extended", "apk"
-get_github_repo_assets_container(owner, repo_name, extension_filter)
+
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    owner, repo_name, extension_filter = "NoName-exe", "revanced-extended", "apk"
+    get_github_repo_assets_container(owner, repo_name, extension_filter)
+
+with col2:
+    owner, repo_name, extension_filter = "Team-xManager", "xManager", "apk"
+    get_github_repo_assets_container(owner, repo_name, extension_filter)
+
+with col3:
+    owner, repo_name, extension_filter = "NeoApplications", "Neo-Store", "apk"
+    get_github_repo_assets_container(owner, repo_name, extension_filter)
+
+
+
 
 
 # st.write("")
