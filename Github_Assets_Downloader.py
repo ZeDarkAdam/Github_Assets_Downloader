@@ -45,7 +45,7 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
     with st.container(border=True):
 
         with st.spinner(f'Getting the latest version of {repo_name}...'):
-            time.sleep(0.5)
+            #time.sleep(0.5)
 
             repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/latest"
 
@@ -143,6 +143,12 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 st.error(f"Failed to fetch release information of **{repo_name}**. Status code: [**{response.status_code}**]({repo_url})")
 
                 #st.toast('The request limit from this IP address has been exceeded, please come back later', icon=None)
+
+
+                error_info = response.json()
+                with st.expander("Details", expanded=False) :
+                    st.write(error_info["message"])
+
                 return 403
 
 
