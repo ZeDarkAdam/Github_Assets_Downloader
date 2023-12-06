@@ -12,7 +12,7 @@ import time
 st.set_page_config(
     page_title="GitHub API Test",
     page_icon= "⬇️",
-    layout="wide" # wide, centered
+    layout="centered" # wide, centered
 )
 
 # hide_st_style = """
@@ -25,7 +25,7 @@ st.set_page_config(
 
 
 
-def write_download_page(b_size, name, download_url, download_count, button_type):
+def write_download_asset(b_size, name, download_url, download_count, button_type):
     mb_size = bytes_to_megabytes(b_size)
     st.subheader(f'**{name}**')
     st.link_button(f"**Download** ({mb_size} MB)", download_url, help = None, type = button_type, disabled=False, use_container_width=True)
@@ -45,11 +45,17 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
     with st.container(border=True):
 
         with st.spinner(f'Getting the latest version of {repo_name}...'):
-            #time.sleep(0.5)
+            time.sleep(0.5)
 
             repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/latest"
 
-            response = requests.get(repo_url, headers={"Accept": "application/vnd.github+json"})
+
+            headers = {
+                "Accept": "application/vnd.github+json",
+                
+            } # "Authorization": f"Bearer {github_token}"
+            
+            response = requests.get(repo_url, headers=headers)
 
             if response.status_code == 200:
                 ###########################################################################
@@ -67,8 +73,15 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 days = time_difference.days
                 weeks = math.ceil(time_difference.days / 7)
                 months = time_difference.days // 30.44
-                
-                if months > 0:
+
+                seconds_in_a_year = 365.25 * 24 * 60 * 60
+                years = int(time_difference.total_seconds() / seconds_in_a_year)
+                #st.write(years)
+
+                if years > 0:
+                    ago = "years ago"
+                    time_num = years
+                elif months > 0:
                     ago = "months ago"
                     time_num = months
                 elif weeks > 0:
@@ -87,6 +100,22 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 
                 #with st.container(border=True):
                     
+                extension_filter = f".{extension_filter}"
+
+                assets = release_info["assets"] 
+
+                filtered_assets = []
+                other_assets = []
+
+                if assets:
+                    for asset in assets:
+                        if extension_filter in asset["name"]:
+                            filtered_assets.append(asset)
+                        else:
+                            other_assets.append(asset)
+
+
+
                 st.subheader(f"**{repo_name}**\nUpdated **{int(time_num)}** {ago}", divider = 'grey') # 'grey'
 
                 #st.write(f"Updated **{days}** {ago}")
@@ -95,33 +124,23 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 #st.subheader("", divider='gray')
 
 
-                tab1, tab2 = st.tabs(["Download", f"Changelog"])
+                tab1, tab2, tab3 = st.tabs([f"Main Assets ({len(filtered_assets)})", f"Other Assets ({len(other_assets)})", "Changelog"])
 
                 
                 with tab1:
-                    
-
-                    extension_filter = f".{extension_filter}"
-                    
-                    # if all_ext == True:   
-                    #     extension_filter = ""
-
-                    assets = release_info["assets"] 
-                    if assets:
-                        for asset in assets:
-                            if extension_filter in asset["name"]:
-                                
-                                write_download_page(asset["size"], asset["name"], asset["browser_download_url"], asset["download_count"], "primary")
-
-                                # mb_size = bytes_to_megabytes(asset["size"])
-                                # st.subheader(f'**{asset["name"]}**')
-                                # st.link_button(f"**Download** ({mb_size} MB)", asset["browser_download_url"], help = None, type = "primary", disabled=False, use_container_width=True)
-                                # st.caption(f'Downloaded: **{asset["download_count"]}** times')
+                    if filtered_assets:
+                        for asset in filtered_assets:
+                                write_download_asset(asset["size"], asset["name"], asset["browser_download_url"], asset["download_count"], "primary")
 
 
+                    else:
+                        st.error("No assets found.")
 
-                            elif all_ext:
-                                write_download_page(asset["size"], asset["name"], asset["browser_download_url"], asset["download_count"], "secondary")
+
+                with tab2:
+                    if other_assets:
+                        for asset in other_assets:
+                            write_download_asset(asset["size"], asset["name"], asset["browser_download_url"], asset["download_count"], "secondary")
 
 
                     else:
@@ -129,13 +148,12 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
 
 
 
-                with tab2:
-
+                with tab3:
                     st.write(release_info["body"])
 
 
 
-
+                return 0
 
 
 
@@ -149,40 +167,48 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 with st.expander("Details", expanded=False) :
                     st.write(error_info["message"])
 
-                return 403
+                return 1 # 403
 
 
 
-#st.sidebar.title(f'Add repos')
-all_ext = st.sidebar.toggle(f'Show all file extensions', value = False)
+st.sidebar.title(f'Sidebar')
+
+#all_ext = st.sidebar.toggle(f'Show all file extensions', value = False)
 
 
 st.title("Github Assets Downloader")
 
 
+####################################################################################
+# col1, col2, col3 = st.columns(3)
+# with col1:
+#     owner, repo_name, extension_filter = "NoName-exe", "revanced-extended", "apk"
+#     get_github_repo_assets_container(owner, repo_name, extension_filter)
 
-col1, col2, col3 = st.columns(3)
-with col1:
-    owner, repo_name, extension_filter = "NoName-exe", "revanced-extended", "apk"
-    get_github_repo_assets_container(owner, repo_name, extension_filter)
+# with col2:
+#     owner, repo_name, extension_filter = "Team-xManager", "xManager", "apk"
+#     get_github_repo_assets_container(owner, repo_name, extension_filter)
 
-with col2:
-    owner, repo_name, extension_filter = "Team-xManager", "xManager", "apk"
-    get_github_repo_assets_container(owner, repo_name, extension_filter)
-
-with col3:
-    owner, repo_name, extension_filter = "NeoApplications", "Neo-Store", "apk"
-    get_github_repo_assets_container(owner, repo_name, extension_filter)
-
-
-
+# with col3:
+#     owner, repo_name, extension_filter = "NeoApplications", "Neo-Store", "apk"
+#     get_github_repo_assets_container(owner, repo_name, extension_filter)
+####################################################################################
 
 
-# st.write("")
-# owner, repo_name, extension_filter = "Team-xManager", "xManager", ".apk"
-# get_github_repo_assets_container(owner, repo_name, extension_filter)
+owner, repo_name, extension_filter = "NoName-exe", "revanced-extended", "apk"
+get_github_repo_assets_container(owner, repo_name, extension_filter)
 
 
-# st.write("")
-# owner, repo_name, extension_filter = "NeoApplications", "Neo-Store", ".apk"
-# get_github_repo_assets_container(owner, repo_name, extension_filter)
+st.write("")
+owner, repo_name, extension_filter = "Team-xManager", "xManager", "apk"
+get_github_repo_assets_container(owner, repo_name, extension_filter)
+
+
+st.write("")
+owner, repo_name, extension_filter = "vfsfitvnm", "ViMusic", "apk"
+get_github_repo_assets_container(owner, repo_name, extension_filter)
+
+
+st.write("")
+owner, repo_name, extension_filter = "NeoApplications", "Neo-Store", "apk"
+get_github_repo_assets_container(owner, repo_name, extension_filter)
