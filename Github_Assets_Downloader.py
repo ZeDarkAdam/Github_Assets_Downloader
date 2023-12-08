@@ -71,7 +71,8 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 minutes = time_difference.total_seconds() // 60
                 hours = time_difference.total_seconds() // 3600
                 days = time_difference.days
-                weeks = math.ceil(time_difference.days / 7)
+                #weeks = math.ceil(time_difference.days / 7)
+                weeks = time_difference.days / 7
                 months = time_difference.days // 30.44
 
                 seconds_in_a_year = 365.25 * 24 * 60 * 60
@@ -84,9 +85,9 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 elif months > 0:
                     ago = "months ago"
                     time_num = months
-                elif weeks > 0:
+                elif weeks >= 1:
                     ago = "weeks ago"
-                    time_num = weeks
+                    time_num = math.ceil(weeks)
                 elif days > 0:
                     ago = "days ago"
                     time_num = days
