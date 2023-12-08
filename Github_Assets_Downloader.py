@@ -168,7 +168,7 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 #with st.expander("Details", expanded=False) :
                     #st.write(error_info["message"])
 
-                return 1 # 403
+                return 403 # 403
 
 
 
@@ -195,21 +195,29 @@ st.title("Github Assets Downloader")
 #     get_github_repo_assets_container(owner, repo_name, extension_filter)
 ####################################################################################
 
+statbox = []
 
 owner, repo_name, extension_filter = "NoName-exe", "revanced-extended", "apk"
-get_github_repo_assets_container(owner, repo_name, extension_filter)
+stat = get_github_repo_assets_container(owner, repo_name, extension_filter)
+statbox.append(stat)
 
-
-st.write("")
 owner, repo_name, extension_filter = "Team-xManager", "xManager", "apk"
-get_github_repo_assets_container(owner, repo_name, extension_filter)
+stat = get_github_repo_assets_container(owner, repo_name, extension_filter)
+statbox.append(stat)
 
-
-st.write("")
 owner, repo_name, extension_filter = "vfsfitvnm", "ViMusic", "apk"
-get_github_repo_assets_container(owner, repo_name, extension_filter)
+stat = get_github_repo_assets_container(owner, repo_name, extension_filter)
+statbox.append(stat)
 
-
-st.write("")
 owner, repo_name, extension_filter = "NeoApplications", "Neo-Store", "apk"
-get_github_repo_assets_container(owner, repo_name, extension_filter)
+stat = get_github_repo_assets_container(owner, repo_name, extension_filter)
+statbox.append(stat)
+
+error_403 = False
+
+for stat in statbox:
+    if stat == 403:
+        error_403 = True
+
+if error_403:
+    st.toast('The request limit from this IP address has been exceeded, please come back later', icon=None)
