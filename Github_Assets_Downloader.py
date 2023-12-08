@@ -164,9 +164,9 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
                 #st.toast('The request limit from this IP address has been exceeded, please come back later', icon=None)
 
 
-                error_info = response.json()
-                with st.expander("Details", expanded=False) :
-                    st.write(error_info["message"])
+                #error_info = response.json()
+                #with st.expander("Details", expanded=False) :
+                    #st.write(error_info["message"])
 
                 return 1 # 403
 
