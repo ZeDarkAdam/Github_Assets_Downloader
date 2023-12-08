@@ -10,7 +10,7 @@ import time
 
 
 st.set_page_config(
-    page_title="GitHub API Test",
+    page_title="Git Assets Downloader",
     page_icon= "⬇️",
     layout="centered" # wide, centered
 )
