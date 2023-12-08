@@ -172,7 +172,7 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
 
 
 
-st.sidebar.title(f'Sidebar')
+#st.sidebar.title(f'Sidebar')
 
 #all_ext = st.sidebar.toggle(f'Show all file extensions', value = False)
 
