@@ -45,7 +45,7 @@ def get_github_repo_assets_container(owner, repo_name, extension_filter):
     with st.container(border=True):
 
         with st.spinner(f'Getting the latest version of {repo_name}...'):
-            time.sleep(0.5)
+            time.sleep(0.3)
 
             repo_url = f"https://api.github.com/repos/{owner}/{repo_name}/releases/latest"
 
